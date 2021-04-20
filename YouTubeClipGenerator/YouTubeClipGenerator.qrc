@@ -1,4 +1,5 @@
 <RCC>
-    <qresource prefix="YouTubeClipGenerator">
+    <qresource prefix="/YouTubeClipGenerator">
+        <file>sound/download_finished.wav</file>
     </qresource>
 </RCC>
