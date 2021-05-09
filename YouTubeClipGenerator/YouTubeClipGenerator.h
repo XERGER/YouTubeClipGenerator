@@ -47,5 +47,4 @@ private:
 	const QString fullPath = appDirPath + "/output/%1";
     const QString jsonFileName = "meta.json";
     const QClipboard* clipboard = QGuiApplication::clipboard();
-
 };

@@ -10,26 +10,21 @@ YouTubeClipGenerator::YouTubeClipGenerator(QWidget *parent)
 	connect(ui.clip_button, &QPushButton::clicked,		 this, &YouTubeClipGenerator::createClip);
 	connect(ui.open_folder, &QPushButton::clicked,		 this, &YouTubeClipGenerator::openSaveDir );
 
-
 	connect(clipboard, &QClipboard::dataChanged, this, &YouTubeClipGenerator::checkForNewYouTubeLinkAndDownloadIt);
 	
-	
-	//
 	//	QCompleter* fileEditCompleter = new QCompleter(dirContents, this);
 	//	fileEditCompleter->setCaseSensitivity(Qt::CaseInsensitive);
 	//	fileEditCompleter->setCompletionMode(QCompleter::UnfilteredPopupCompletion);
 	//	ui->lineEdit->setCompleter(fileEditCompleter);
 }
 
-
 struct YouTubeClipGenerator::Video {
-	Video(const QString const& path, const QJsonObject& metaData) : metaData(metaData), parentPath(path) {
+	Video(QString const& path,  QJsonObject const& metaData) :
+		metaData(metaData), parentPath(path) {
 
 	}
 
 	const QJsonObject metaData;
-
-
 	const QString parentPath;
 
 	const QString title = metaData["title"].toString();
@@ -38,8 +33,6 @@ struct YouTubeClipGenerator::Video {
 	const QString titleNameForFolder = removeForbbidenFilenameSymbols(title.left(40));
 
 	const QString folderName = removeForbbidenFilenameSymbols(channel) + "/" + titleNameForFolder + + "/";
-
-
 	const QString folderPath = parentPath.arg(folderName);
 
 	const QString jsonMetaFilename = titleNameForFolder + "-meta.json";
@@ -62,34 +55,24 @@ private:
 
 void YouTubeClipGenerator::checkForNewYouTubeLinkAndDownloadIt()
 {
-
-
 	if (QUrl url = { QApplication::clipboard()->text() };
 			!url.isEmpty() && url.isValid() ) {
+				if (url.host() == "www.youtube.com" || url.host() == "youtu.be") {
+					const QUrlQuery query{ url };
 
-				if (url.host() == "youtube.com")
-				{
-					QMetaObject::invokeMethod(this, "downloadYoutubeVideo", Qt::QueuedConnection, Q_ARG(QUrl const&, url));
-				}
-				else if( url.host() == "youtu.be" )
-				{
-					const QUrlQuery query{url};
-
-					if (query.hasQueryItem("t"))
-					{
+					if ( query.hasQueryItem("t") )	{
 						const auto startOffsetSeconds = query.queryItemValue("t").toInt();
-						const QTime startStamp =
-						[startOffsetSeconds]	{
-							QTime time{0,0};
+						const QTime startStamp = [startOffsetSeconds] {
+							QTime time{ 0,0 };
 							return time.addSecs(startOffsetSeconds);
 						}();
 
 						ui.start->setTime(startStamp);
 					}
+					ui.file_name_label->setText("downloading ...");
 					QMetaObject::invokeMethod(this, "downloadYoutubeVideo", Qt::QueuedConnection, Q_ARG(QUrl const&, url));
 				}
-
-			
+				qDebug() << url.host();
 		}
 	
 }
