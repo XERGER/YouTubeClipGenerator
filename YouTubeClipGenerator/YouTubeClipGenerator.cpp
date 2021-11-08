@@ -1,17 +1,17 @@
 #include "YouTubeClipGenerator.h"
 
-YouTubeClipGenerator::YouTubeClipGenerator(QWidget *parent)
-    : QMainWindow(parent)
+YouTubeClipGenerator::YouTubeClipGenerator(QWidget* parent)
+	: QMainWindow(parent)
 {
-    ui.setupUi(this);
+	ui.setupUi(this);
 
 
-//	connect(ui.clipboard_button, &QPushButton::clicked,  this, &YouTubeClipGenerator::downloadYtUrlFromClipboard );
-	connect(ui.clip_button, &QPushButton::clicked,		 this, &YouTubeClipGenerator::createClip);
-	connect(ui.open_folder, &QPushButton::clicked,		 this, &YouTubeClipGenerator::openSaveDir );
+	//	connect(ui.clipboard_button, &QPushButton::clicked,  this, &YouTubeClipGenerator::downloadYtUrlFromClipboard );
+	connect(ui.clip_button, &QPushButton::clicked, this, &YouTubeClipGenerator::createClip);
+	connect(ui.open_folder, &QPushButton::clicked, this, &YouTubeClipGenerator::openSaveDir);
 
 	connect(clipboard, &QClipboard::dataChanged, this, &YouTubeClipGenerator::checkForNewYouTubeLinkAndDownloadIt);
-	
+
 	//	QCompleter* fileEditCompleter = new QCompleter(dirContents, this);
 	//	fileEditCompleter->setCaseSensitivity(Qt::CaseInsensitive);
 	//	fileEditCompleter->setCompletionMode(QCompleter::UnfilteredPopupCompletion);
@@ -19,7 +19,7 @@ YouTubeClipGenerator::YouTubeClipGenerator(QWidget *parent)
 }
 
 struct YouTubeClipGenerator::Video {
-	Video(QString const& path,  QJsonObject const& metaData) :
+	Video(QString const& path, QJsonObject const& metaData) :
 		metaData(metaData), parentPath(path) {
 
 	}
@@ -32,11 +32,11 @@ struct YouTubeClipGenerator::Video {
 
 	const QString titleNameForFolder = removeForbbidenFilenameSymbols(title.left(40));
 
-	const QString folderName = removeForbbidenFilenameSymbols(channel) + "/" + titleNameForFolder + + "/";
+	const QString folderName = removeForbbidenFilenameSymbols(channel) + "/" + titleNameForFolder + +"/";
 	const QString folderPath = parentPath.arg(folderName);
 
 	const QString jsonMetaFilename = titleNameForFolder + "-meta.json";
-	const QString filename = titleNameForFolder  + ".mp4";
+	const QString filename = titleNameForFolder + ".mp4";
 
 	const QString filePath = folderPath + filename;
 	const QString metaFilePath = folderPath + jsonMetaFilename;
@@ -47,8 +47,8 @@ struct YouTubeClipGenerator::Video {
 
 private:
 	static QString removeForbbidenFilenameSymbols(QString value) {
-		 value = value.remove(QRegExp(QString::fromUtf8("[-`~!@#$%^&*()_—+=|:;<>«»,.?/{}\'\"\\\[\\\]\\\\]")));
-		 return value.replace(" ", "_");
+		value = value.remove(QRegExp(QString::fromUtf8("[-`~!@#$%^&*()_—+=|:;<>«»,.?/{}\'\"\\\[\\\]\\\\]")));
+		return value.replace(" ", "_");
 	}
 
 };
@@ -56,33 +56,31 @@ private:
 void YouTubeClipGenerator::checkForNewYouTubeLinkAndDownloadIt()
 {
 	if (QUrl url = { QApplication::clipboard()->text() };
-			!url.isEmpty() && url.isValid() ) {
-				if (url.host() == "www.youtube.com" || url.host() == "youtu.be") {
-					const QUrlQuery query{ url };
+		!url.isEmpty() && url.isValid()) {
+		if (url.host() == "www.youtube.com" || url.host() == "youtu.be") {
+			const QUrlQuery query{ url };
 
-					if ( query.hasQueryItem("t") )	{
-						const auto startOffsetSeconds = query.queryItemValue("t").toInt();
-						const QTime startStamp = [startOffsetSeconds] {
-							QTime time{ 0,0 };
-							return time.addSecs(startOffsetSeconds);
-						}();
+			if (query.hasQueryItem("t")) {
+				const auto startOffsetSeconds = query.queryItemValue("t").toInt();
+				const auto startStamp = [startOffsetSeconds] {
+					QTime time{ 0,0 };
+					return time.addSecs(startOffsetSeconds);
+				}();
 
-						ui.start->setTime(startStamp);
-					}
-					ui.file_name_label->setText("downloading ...");
-					QMetaObject::invokeMethod(this, "downloadYoutubeVideo", Qt::QueuedConnection, Q_ARG(QUrl const&, url));
-				}
-				qDebug() << url.host();
+				ui.start->setTime(startStamp);
+			}
+			ui.file_name_label->setText("downloading ...");
+			QMetaObject::invokeMethod(this, "downloadYoutubeVideo", Qt::QueuedConnection, Q_ARG(QUrl const&, url));
 		}
-	
-}
+		qDebug() << url.host();
+	}
 
+}
 
 void YouTubeClipGenerator::openSaveDir() const
 {
 	QDesktopServices::openUrl(QUrl::fromLocalFile(video()->folderPath));
 }
-
 
 void YouTubeClipGenerator::playFinishSound() const
 {
@@ -92,28 +90,24 @@ void YouTubeClipGenerator::playFinishSound() const
 
 void YouTubeClipGenerator::downloadYoutubeVideo(QUrl const& url) const
 {
-
 	if (auto data = downloader.downloadMetaData(url); !data.isEmpty()) {
 		video().reset(new Video(fullPath, data));
 		ui.file_name_label->setText(video()->title);
 		createMetaDataFileAndFolder(*video());
 
-		downloader.download(url, video()->filePath );
+		downloader.download(url, video()->filePath);
 		playFinishSound();
 	}
-
-
 }
 
 void YouTubeClipGenerator::createMetaDataFileAndFolder(Video const& video) const
 {
 	createFolder(video.folderPath);
-	createJsonMetaFile(video.metaFilePath, QJsonDocument{ video.metaData } );
+	createJsonMetaFile(video.metaFilePath, QJsonDocument{ video.metaData });
 }
 
-void YouTubeClipGenerator::createClip( ) const
+void YouTubeClipGenerator::createClip() const
 {
-
 	ffmpeg.clip(
 		video()->filePath,
 		video()->createClipPath(ui.name_input->text()),
@@ -130,13 +124,13 @@ std::unique_ptr<YouTubeClipGenerator::Video>& YouTubeClipGenerator::video() cons
 
 void YouTubeClipGenerator::createFolder(QString const& folderPath) const
 {
-	if (QDir dir; !dir.exists(folderPath) )
+	if (QDir dir; !dir.exists(folderPath))
 		dir.mkpath(folderPath);
 }
 
 void YouTubeClipGenerator::createJsonMetaFile(QString const& path, QJsonDocument const& document) const
-{ 
-	if (QFile file(path); file.open(QIODevice::ReadWrite) )
+{
+	if (QFile file(path); file.open(QIODevice::ReadWrite))
 		file.write(document.toJson());
 }
 

@@ -44,7 +44,7 @@ void YouTubeDownloader::download(QUrl const& youtube, QString const& output) con
 	);
 
 	consoleApp.start();
-	consoleApp.waitForFinished();
+	consoleApp.waitForFinished(-1);
 }
 
  QJsonObject YouTubeDownloader::createModifiedJsonObject( QString const& ytDlJsonReturn ) const
@@ -57,9 +57,8 @@ void YouTubeDownloader::download(QUrl const& youtube, QString const& output) con
 			static const QStringList acceptedKeys { "id", "channel", "channel_url",  "uploader", "title", "categories",   "tags" };
 
 			for (auto const& key : fullObject.keys()) {
-				if (acceptedKeys.contains(key)){
-					auto value = fullObject.value(key);
-					retn[key] = value;
+				if (acceptedKeys.contains(key)) {
+					retn[key] = fullObject.value(key);
 				}
 			}
 	}

@@ -23,7 +23,7 @@ public:
 
 	[[nodiscard]] MetaData downloadMetaData(QUrl const& youtube) const;
 	void download(QUrl const& youtube, QString const& output ) const;
-	
+
 	QString const& getPath() const;
 
 
